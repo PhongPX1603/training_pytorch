@@ -136,13 +136,13 @@ class Trainer:
             valid_metrics = self.eval_epoch(evaluator_name='valid', dataloader=self.data['valid'])
 
             messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in train_metrics.items()]
-            self.verbose(message=f"\t{' - '.join(messages)}")
+            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
 
             messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in train_eval_metrics.items()]
-            self.verbose(message=f"\t{' - '.join(messages)}")
+            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
 
             messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in valid_metrics.items()]
-            self.verbose(message=f"\t{' - '.join(messages)}")
+            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
 
             # update learning scheduler
             self.lr_scheduler.step(valid_metrics[f'valid_loss'])
@@ -167,7 +167,7 @@ class Trainer:
 
             save_backup_path = self.save_dir.joinpath(f'backup_epoch_{epoch}.pth')
             torch.save(obj=backup_checkpoint, f=str(save_backup_path))
-            self.verbose(message=f'\t__Saving Backup Checkpoint__: {str(save_backup_path)}', _print=False)
+            self.verbose(message=f'\t[__Saving Backup Checkpoint__] {str(save_backup_path)}', _print=False)
 
             score = -valid_metrics[f'valid_{score_name}'] if mode == 'min' else valid_metrics[f'valid_{score_name}']
             if score > best_score:                
@@ -176,7 +176,7 @@ class Trainer:
 
                 best_score = score
                 save_path = self.save_dir.joinpath(f'best_model_{epoch}_{score_name}_{best_score}.pth')
-                self.verbose(message=f'\t__Saving Checkpoint__: {str(save_path)}', _print=False)
+                self.verbose(message=f'\t[__Saving Checkpoint__] {str(save_path)}', _print=False)
                 torch.save(obj=self.model.state_dict(), f=str(save_path))
 
         self.verbose(message=f'{time.asctime()} - COMPLETED')
