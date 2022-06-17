@@ -171,8 +171,8 @@ class Trainer:
 
             score = -valid_metrics[f'valid_{score_name}'] if mode == 'min' else valid_metrics[f'valid_{score_name}']
             if score > best_score:                
-                if self.save_dir.joinpath(f'best_valid_{score_name}_{best_score}.pth').exists():
-                    os.remove(str(self.save_dir.joinpath(f'best_valid_{score_name}_{best_score}.pth')))
+                if self.save_dir.joinpath(f'best_model_{epoch - 1}_{score_name}_{best_score}.pth').exists():
+                    os.remove(str(self.save_dir.joinpath(f'best_model_{epoch - 1}_{score_name}_{best_score}.pth')))
 
                 best_score = score
                 save_path = self.save_dir.joinpath(f'best_model_{epoch}_{score_name}_{best_score}.pth')
