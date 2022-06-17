@@ -127,6 +127,9 @@ class Trainer:
             score_name = self.early_stopping.score_name
             best_score = -np.Inf if mode == 'min' else 0
 
+        # Initialize checkpoint path for saving checkpoint
+        _checkpoint_path = self.save_dir / f'best_model_{start_epoch}_{score_name}_{best_score}.pth'
+
         # Start to train
         self.verbose(message=f'{time.asctime()} - STARTED')
         for epoch in range(start_epoch, num_epochs):
@@ -135,6 +138,16 @@ class Trainer:
             train_eval_metrics = self.eval_epoch(evaluator_name='train_eval', dataloader=self.data['train_eval'])
             valid_metrics = self.eval_epoch(evaluator_name='valid', dataloader=self.data['valid'])
 
+            # update learning scheduler
+            self.lr_scheduler.step(valid_metrics['valid_loss'])
+
+            # update early stopping
+            self.early_stopping(valid_metrics)
+            if self.early_stopping.early_stop:
+                self.verbose(message=f'{time.asctime()} - EARLY STOPPING.')
+                break
+
+            # export training information
             messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in train_metrics.items()]
             self.verbose(message=f"\t[Info] {' - '.join(messages)}")
 
@@ -144,15 +157,6 @@ class Trainer:
             messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in valid_metrics.items()]
             self.verbose(message=f"\t[Info] {' - '.join(messages)}")
 
-            # update learning scheduler
-            self.lr_scheduler.step(valid_metrics[f'valid_loss'])
-
-            # update early stopping
-            self.early_stopping(valid_metrics)
-            if self.early_stopping.early_stop:
-                self.logger.info('__Stop Training__ Model can not improve.')
-                break
-
             # save backup checkpoint
             if self.save_dir.joinpath(f'backup_epoch_{epoch - 1}.pth').exists():
                 os.remove(str(self.save_dir.joinpath(f'backup_epoch_{epoch - 1}.pth')))
@@ -160,23 +164,22 @@ class Trainer:
             backup_checkpoint = {
                 'epoch': epoch,
                 'best_score': best_score,
-                'score_name': self.early_stopping.score_name,
+                'score_name': score_name,
                 'model': self.model.state_dict(),
                 'optim': self.optim.state_dict(),
             }
 
-            save_backup_path = self.save_dir.joinpath(f'backup_epoch_{epoch}.pth')
-            torch.save(obj=backup_checkpoint, f=str(save_backup_path))
-            self.verbose(message=f'\t[__Saving Backup Checkpoint__] {str(save_backup_path)}', _print=False)
+            backup_checkpoint_path = self.save_dir / f'backup_epoch_{epoch}.pth'
+            torch.save(obj=backup_checkpoint, f=str(backup_checkpoint_path))
+            self.verbose(message=f'\t[__Saving Backup Checkpoint__] {str(backup_checkpoint_path)}', _print=False)
 
             score = -valid_metrics[f'valid_{score_name}'] if mode == 'min' else valid_metrics[f'valid_{score_name}']
-            if score > best_score:                
-                if self.save_dir.joinpath(f'best_model_{epoch - 1}_{score_name}_{best_score}.pth').exists():
-                    os.remove(str(self.save_dir.joinpath(f'best_model_{epoch - 1}_{score_name}_{best_score}.pth')))
-
-                best_score = score
-                save_path = self.save_dir.joinpath(f'best_model_{epoch}_{score_name}_{best_score}.pth')
-                self.verbose(message=f'\t[__Saving Checkpoint__] {str(save_path)}', _print=False)
-                torch.save(obj=self.model.state_dict(), f=str(save_path))
+            if score > best_score:
+                best_score = score                
+                if _checkpoint_path.exists():
+                    os.remove(str(_checkpoint_path))
+                _checkpoint_path = self.save_dir / f'best_model_{epoch}_{score_name}_{best_score}.pth'
+                torch.save(obj=self.model.state_dict(), f=str(_checkpoint_path))
+                self.verbose(message=f'\t[__Saving Checkpoint__] {str(_checkpoint_path)}', _print=False)
 
         self.verbose(message=f'{time.asctime()} - COMPLETED')

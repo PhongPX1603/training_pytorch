@@ -70,11 +70,10 @@ early_stopping:
   EarlyStopping:
     evaluator_name: '''valid'''
     score_name: '''loss'''
-    patience: 10
-    verbose: True
+    patience: 3
     delta: 0
     mode: '''min'''
-    
+
 metric:
   module: metric.metric
   class: Metric
