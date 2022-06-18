@@ -42,7 +42,8 @@ class Trainer:
         self.logger = logger.get_logger(log_name='training')
 
         # get model info
-        model_info(self.model, self.logger)
+        if model_info is not None:
+            model_info(self.model, self.logger)
 
         # Save Directory for Checkpoint and Backup
         self.save_dir = Path(save_dir) / datetime.now().strftime(r'%y%m%d%H%M')
@@ -133,10 +134,10 @@ class Trainer:
             checkpoint = torch.load(f=resume_path, map_location=self.device)
             self.model.load_state_dict(checkpoint['model'])
             self.optim.load_state_dict(checkpoint['optim'])
-            start_epoch = checkpoint['epoch']
+            start_epoch = checkpoint['epoch'] + 1
             best_score = checkpoint['best_score']
             score_name = checkpoint['score_name']
-            mode = checkpoint['mode']
+            mode = self.early_stopping.mode
         else:
             start_epoch = 0
             mode = self.early_stopping.mode
@@ -148,7 +149,7 @@ class Trainer:
 
         # Start to train
         self.verbose(message=f'{time.asctime()} - STARTED')
-        for epoch in range(start_epoch, num_epochs):
+        for epoch in range(start_epoch, num_epochs + start_epoch):
             self.verbose(message=f'Epoch #{epoch} - {time.asctime()}')
             train_metrics = self.train_epoch(evaluator_name='train', dataloader=self.data['train'])
             train_eval_metrics = self.eval_epoch(evaluator_name='train_eval', dataloader=self.data['train_eval'])
