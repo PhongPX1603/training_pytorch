@@ -107,6 +107,13 @@ logger:
     mode: logging.DEBUG
     format: '''%(asctime)s - %(name)s - %(levelname)s - %(message)s'''
 
+model_info:
+  module: trainer.utils
+  class: ModelInfo
+  ModelInfo:
+    verbose: True
+    input_shape: '(28, 28, 1)'
+
 trainer:
   module: trainer.trainer
   class: Trainer
@@ -123,6 +130,7 @@ trainer:
     lr_scheduler: config['lr_scheduler']
     logger: config['logger']
     writer: config['writer']
+    model_info: config['model_info']
     save_dir: '''checkpoint/MNIST/'''
 
 extralibs:

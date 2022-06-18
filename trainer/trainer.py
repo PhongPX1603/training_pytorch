@@ -22,6 +22,7 @@ class Trainer:
         metric: Callable = None,
         early_stopping: nn.Module = None,
         lr_scheduler: nn.Module = None,
+        model_info: Callable = None,
         logger: Callable = None,
         writer: Callable = None,
         save_dir: str = None
@@ -39,6 +40,9 @@ class Trainer:
         # Logger and Tensorboard
         self.writer = writer
         self.logger = logger.get_logger(log_name='training')
+
+        # get model info
+        model_info(self.model, self.logger)
 
         # Save Directory for Checkpoint and Backup
         self.save_dir = Path(save_dir) / datetime.now().strftime(r'%y%m%d%H%M')
@@ -103,7 +107,7 @@ class Trainer:
                 messages.append(f'{metric_name}: {metric_value:.5f}')
 
         message = ' - '.join(messages)
-        self.verbose(message=f'\t[Info]{message}', _print=_print)
+        self.verbose(message=f'\t [Info]{message}', _print=_print)
 
     def train(
         self,

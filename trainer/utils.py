@@ -3,7 +3,7 @@ import time
 import torch
 from torch import nn
 from thop.profile import profile  # using to get params and flops
-from typing import Tuple, List
+from typing import Callable, Tuple, List
 
 
 def prepare_device(n_gpu_use: int = 0) -> Tuple[str, List[int]]:
@@ -23,32 +23,42 @@ def prepare_device(n_gpu_use: int = 0) -> Tuple[str, List[int]]:
     return device, gpu_indices
 
 
-def model_info(model, verbose=False, image_channels=3, image_size=224):
-    # the number of parameters
-    n_params = sum(param.numel() for param in model.parameters())
-    # the number of gradients
-    n_grads = sum(param.numel() for param in model.parameters() if param.requires_grad)
+class ModelInfo:
+    def __init__(self, verbose: bool = False, input_shape: Tuple[int, int, int] = (224, 224, 3)):
+        self.verbose = verbose
+        self.input_shape = input_shape
 
-    if verbose:
-        for i, (name, params) in enumerate(model.named_parameters()):
-            name = name.replace('module_list.', '')
-            print(
-                f"layer: {i}, name: {name}, gradient: {params.requires_grad}, params: {params.numel()}, "
-                f"shape: {list(params.shape)}, mu: {params.mean().item()}, sigma: {params.std().item()}"
-            )
+    def __call__(self, model: nn.Module, logger: Callable) -> None:
+        # the number of parameters
+        n_params = sum(param.numel() for param in model.parameters())
+        # the number of gradients
+        n_grads = sum(param.numel() for param in model.parameters() if param.requires_grad)
 
-    # get FLOPs
-    try:
-        device = next(model.parameters()).device
-        image_size = image_size if isinstance(image_size, tuple) else (image_size, image_size)
-        dummy_image = torch.zeros(size=(1, image_channels, image_size[0], image_size[1]), device=device)
-        total_ops, total_params = profile(copy.deepcopy(model), inputs=(dummy_image,), verbose=False)  # MACs, params
-        total_ops, total_params = round(total_ops / 1e9, 2), round(total_params / 1e6, 2)  # GMACs, Mparams
-    except (ImportError, Exception):
-        total_ops, total_params = '-', '-'
+        if self.verbose:
+            message = '___MODEL INFOMATION___\n'
+            message += '\tModel Detail:\n'
+            for i, (name, params) in enumerate(model.named_parameters()):
+                name = name.replace('module_list.', '')
+                message += f"\t  [...] layer: {i}, name: {name}, gradient: {params.requires_grad}, params: {params.numel()}, "
+                message += f"shape: {list(params.shape)}, mu: {params.mean().item()}, sigma: {params.std().item()}\n"
+            logger.info(message)
+            print(message)
 
-    print(f"Model Summary: {len(list(model.modules()))} layers, {n_params} parameters, {n_grads} gradients")
-    print(f"               Params (M): {total_params}, MACs(G): {total_ops}")
+        # get FLOPs
+        try:
+            device = next(model.parameters()).device
+            dummy_image = torch.zeros(size=(1, self.input_shape[2], self.input_shape[0], self.input_shape[1]), device=device)
+            total_ops, total_params = profile(copy.deepcopy(model), inputs=(dummy_image,), verbose=False)  # MACs, params
+            total_ops, total_params = round(total_ops / 1e9, 2), round(total_params / 1e6, 2)  # GMACs, Mparams
+        except (ImportError, Exception):
+            total_ops, total_params = '-', '-'
+
+        message += f"\tModel Summary:\n"
+        message += f"\t  [...] Layers: {len(list(model.modules()))}, Parameters: {n_params}, Gradients: {n_grads}\n"
+        message += f"\t  [...] Params (M): {total_params}, MACs (G): {total_ops}\n"
+
+        logger.info(message)
+        print(message)
 
 
 def time_sync():
