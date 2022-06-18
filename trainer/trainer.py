@@ -7,7 +7,7 @@ import torch.nn as nn
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
-from typing import Optional, Callable, Dict, Tuple, List
+from typing import Optional, Callable, Dict, Any
 
 from .utils import prepare_device
 
@@ -96,6 +96,15 @@ class Trainer:
         if _print:
             print(message)
 
+    def verbose_metric(self, metric: Dict[str, Any], _print: bool = True) -> None:
+        messages = []
+        for metric_name, metric_value in metric.items():
+            if isinstance(metric_value, float):
+                messages.append(f'{metric_name}: {metric_value:.5f}')
+
+        message = ' - '.join(messages)
+        self.verbose(message=f'\t[Info]{message}', _print=_print)
+
     def train(
         self,
         num_epochs: int,
@@ -151,14 +160,9 @@ class Trainer:
                 break
 
             # export training information
-            messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in train_metrics.items()]
-            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
-
-            messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in train_eval_metrics.items()]
-            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
-
-            messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in valid_metrics.items()]
-            self.verbose(message=f"\t[Info] {' - '.join(messages)}")
+            self.verbose_metric(train_metrics)
+            self.verbose_metric(train_eval_metrics)
+            self.verbose_metric(valid_metrics)
 
             # save backup checkpoint
             if self.save_dir.joinpath(f'backup_epoch_{epoch - 1}.pth').exists():

@@ -16,12 +16,10 @@ class Accuracy(MetricBase):
 
     def accuracy_fn(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         preds = torch.argmax(preds, dim=1)
-        assert preds.shape[0] == len(targets)
-        correct = 0
-        correct += torch.sum(preds == targets)
-        return correct / len(targets)
+        correct = (preds == targets).sum()
+        return torch.true_divide(correct, targets.shape[0])
 
-    def update(self, output: Any) -> None:
+    def update(self, output: Any) -> float:
         average_accuracy = self.accuracy_fn(*output)
 
         if len(average_accuracy.shape) != 0:
