@@ -1,14 +1,12 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from torch import nn
 from collections import defaultdict
 from typing import Callable, Dict, Any, Tuple, List
 
 
-class MetricBase(nn.Module):
-    def __init__(self, metric_fn: nn.Module, output_transform: Callable = lambda x: x):
-        super(MetricBase, self).__init__()
+class MetricBase(ABC):
+    def __init__(self, output_transform: Callable = lambda x: x):
         self.output_transform = output_transform
-        self.metric_fn = metric_fn
 
     @abstractmethod
     def reset(self) -> None:

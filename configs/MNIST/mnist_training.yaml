@@ -75,14 +75,17 @@ early_stopping:
     mode: '''min'''
 
 metric:
-  module: metric.metric_base
+  module: metric.metric
   class: Metrics
   Metrics:
     metrics:
       accuracy:
         module: metric.confusion_matrix
-        class: Accuracy
-        Accuracy:
+        class: Metric
+        Metric:
+          metric_fn:
+            module: metric.confusion_matrix
+            class: Accuracy
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       loss:
         module: metric.loss

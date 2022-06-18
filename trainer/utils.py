@@ -41,9 +41,6 @@ class ModelInfo:
                 name = name.replace('module_list.', '')
                 message += f"\t  [...] layer: {i}, name: {name}, gradient: {params.requires_grad}, params: {params.numel()}, "
                 message += f"shape: {list(params.shape)}, mu: {params.mean().item()}, sigma: {params.std().item()}\n"
-            logger.info(message)
-            print(message)
-
         # get FLOPs
         try:
             device = next(model.parameters()).device

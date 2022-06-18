@@ -3,38 +3,44 @@ import torch
 import torch.nn as nn
 from typing import Callable, Any
 
-from .metric_base import MetricBase
+from .metric import MetricBase
 
 
-class Accuracy(MetricBase):
-    def __init__(self, output_transform: Callable = lambda x: x):
-        super(Accuracy, self).__init__(output_transform)
+class Metric(MetricBase):
+    def __init__(self, metric_fn: Any, output_transform: Callable = lambda x: x):
+        super(Metric, self).__init__(output_transform)
+        self.metric_fn = metric_fn
 
     def reset(self):
         self._sum = 0
         self._num_examples = 0
 
-    def accuracy_fn(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        preds = torch.argmax(preds, dim=1)
-        correct = (preds == targets).sum()
-        return torch.true_divide(correct, targets.shape[0])
-
     def update(self, output: Any) -> float:
-        average_accuracy = self.accuracy_fn(*output)
+        value = self.metric_fn(*output)
 
-        if len(average_accuracy.shape) != 0:
-            raise ValueError('accuracy_fn did not return the average accuracy.')
+        if len(value.shape) != 0:
+            raise ValueError('metric_fn did not return the average accuracy.')
 
         N = output[0].shape[0]
-        self._sum += average_accuracy.item() * N
+        self._sum += value.item() * N
         self._num_examples += N
 
-        return average_accuracy.item()
+        return value.item()
 
     def compute(self):
         if self._num_examples == 0:
             raise ValueError('Loss must have at least one example before it can be computed.')
         return self._sum / self._num_examples
+
+
+class Accuracy(nn.Module):
+    def __init__(self):
+        super(Accuracy, self).__init__()
+
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        preds = torch.argmax(preds, dim=1)
+        correct = (preds == targets).sum()
+        return torch.true_divide(correct, targets.shape[0])
 
 
 class ConfusionMatrix(MetricBase):
