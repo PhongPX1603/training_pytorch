@@ -44,10 +44,10 @@ class Trainer:
         self.save_dir = Path(save_dir) / datetime.now().strftime(r'%y%m%d%H%M')
         if not self.save_dir.exists():
             self.save_dir.mkdir(parents=True)
-
+        
     def train_epoch(self, evaluator_name: str = 'train', dataloader: nn.Module = None) -> Dict[str, float]:
         self.model.train()
-        self.metric.reset()
+        self.metric.started(evaluator_name)
         for batch in dataloader:
             self.optim.zero_grad()
             params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
@@ -56,37 +56,40 @@ class Trainer:
             loss.backward()
             self.optim.step()
 
-            iteration_metric = self.metric.iteration_compute(evaluator_name=evaluator_name, output=params)
-            self.metric.update(metric=iteration_metric)    
+            # log learning_rate
+            self.writer.add_scalar(
+                name='learning_rate', value=self.optim.param_groups[0]['lr'], step=self.iteration_counters[evaluator_name]
+            )
+
+            iteration_metric = self.metric.iteration_completed(output=params)  
 
             for metric_name, metric_value in iteration_metric.items():
-                self.writer.write(
+                self.writer.add_scalar(
                     name=metric_name, value=metric_value, step=self.iteration_counters[evaluator_name]
                 )
 
             self.iteration_counters[evaluator_name] += 1
 
-        return self.metric.epoch_compute()
+        return self.metric.epoch_completed()
 
     def eval_epoch(self, evaluator_name: str, dataloader: nn.Module = None) -> Dict[str, float]:
         self.model.eval()
-        self.metric.reset()
+        self.metric.started(evaluator_name)
         with torch.no_grad():
             for batch in dataloader:
                 params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
                 params[0] = self.model(params[0])
 
-                iteration_metric = self.metric.iteration_compute(evaluator_name=evaluator_name, output=params)
-                self.metric.update(metric=iteration_metric)    
+                iteration_metric = self.metric.iteration_completed(output=params)
 
                 for metric_name, metric_value in iteration_metric.items():
-                    self.writer.write(
+                    self.writer.add_scalar(
                         name=metric_name, value=metric_value, step=self.iteration_counters[evaluator_name]
                     )
 
                 self.iteration_counters[evaluator_name] += 1
 
-        return self.metric.epoch_compute()
+        return self.metric.epoch_completed()
 
     def verbose(self, message: str, _print: bool = True) -> None:
         self.logger.info(message)

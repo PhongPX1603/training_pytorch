@@ -11,5 +11,5 @@ class Writer:
 
         self.writer = SummaryWriter(str(tb_dir))
 
-    def write(self, name: str, value: float, step: int = 0) -> None:
+    def add_scalar(self, name: str, value: float, step: int = 0) -> None:
         self.writer.add_scalar(name, value, global_step=step)

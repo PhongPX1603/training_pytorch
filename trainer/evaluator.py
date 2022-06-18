@@ -25,16 +25,15 @@ class Evaluator(nn.Module):
 
     def eval_epoch(self, evaluator_name: str, dataloader: nn.Module = None) -> Dict[str, float]:
         self.model.eval()
-        self.metric.reset()
+        self.metric.started(evaluator_name)
         with torch.no_grad():
             for batch in dataloader:
                 params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
                 params[0] = self.model(params[0])
 
-                iteration_metric = self.metric.iteration_compute(evaluator_name=evaluator_name, output=params)
-                self.metric.update(metric=iteration_metric)    
+                iteration_metric = self.metric.iteration_completed(output=params)    
 
-        return self.metric.epoch_compute()
+        return self.metric.epoch_completed()
 
     def eval(self, checkpoint_path: Optional[str] = None, num_gpus: int = 0):
         # Load weight
@@ -54,6 +53,6 @@ class Evaluator(nn.Module):
         # Start to evaluate
         print(f'{time.asctime()} - STARTED')
         metrics = self.eval_epoch(evaluator_name='test', dataloader=self.data)
-        messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in metrics.items()]
+        messages = [f'{metric_name}: {metric_value}' for metric_name, metric_value in metrics.items()]
         print(f"\t[Info] {' - '.join(messages)}")
         print(f'{time.asctime()} - COMPLETED')

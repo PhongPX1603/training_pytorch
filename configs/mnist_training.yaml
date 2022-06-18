@@ -75,22 +75,23 @@ early_stopping:
     mode: '''min'''
 
 metric:
-  module: metric.metric
-  class: Metric
-  Metric:
-    metric:
+  module: metric.metric_base
+  class: Metrics
+  Metrics:
+    metrics:
       accuracy:
-        module: metric.metric
-        class: MetricBase
-        MetricBase:
-          metric_fn:
-            module: metric.confusion_matrix
-            class: Accuracy
+        module: metric.confusion_matrix
+        class: Accuracy
+        Accuracy:
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       loss:
-        module: torch.nn
-        class: CrossEntropyLoss
-    output_transform: 'lambda x: (x[0], x[1])'
+        module: metric.loss
+        class: Loss
+        Loss:
+          loss_fn:
+            module: torch.nn
+            class: CrossEntropyLoss
+          output_transform: 'lambda x: (x[0], x[1])'
 
 writer:
   module: handler.writer
