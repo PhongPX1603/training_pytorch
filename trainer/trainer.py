@@ -25,6 +25,7 @@ class Trainer:
         model_info: Callable = None,
         logger: Callable = None,
         writer: Callable = None,
+        plot: Callable = None,
         save_dir: str = None
     ):
         super(Trainer, self).__init__()
@@ -40,6 +41,7 @@ class Trainer:
         # Logger and Tensorboard
         self.writer = writer
         self.logger = logger.get_logger(log_name='training')
+        self.plot = plot
 
         # get model info
         if model_info is not None:
@@ -56,6 +58,14 @@ class Trainer:
         for batch in dataloader:
             self.optim.zero_grad()
             params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
+            # tensorboard data
+            # self.writer.add_image(
+            #     name='data', data=params[0], step=self.iteration_counters[evaluator_name]
+            # )
+            # tensorboard draw process "hội tụ" of data
+            # self.writer.add_embedding(
+            #     params[0], params[1], step=self.iteration_counters[evaluator_name]
+            # )
             params[0] = self.model(params[0])
             loss = self.loss(*params)
             loss.backward()
@@ -65,7 +75,7 @@ class Trainer:
             self.writer.add_scalar(
                 name='learning_rate', value=self.optim.param_groups[0]['lr'], step=self.iteration_counters[evaluator_name]
             )
-
+ 
             iteration_metric = self.metric.iteration_completed(output=params)  
 
             for metric_name, metric_value in iteration_metric.items():
@@ -106,6 +116,8 @@ class Trainer:
         for metric_name, metric_value in metric.items():
             if isinstance(metric_value, float):
                 messages.append(f'{metric_name}: {metric_value:.5f}')
+                # save metric value to plot
+                self.plot.update(metric_name, metric_value)
 
         message = ' - '.join(messages)
         self.verbose(message=f'\t [Info]{message}', _print=_print)
@@ -193,5 +205,6 @@ class Trainer:
                 _checkpoint_path = self.save_dir / f'best_model_{epoch}_{score_name}_{best_score}.pth'
                 torch.save(obj=self.model.state_dict(), f=str(_checkpoint_path))
                 self.verbose(message=f'\t[__Saving Checkpoint__] {str(_checkpoint_path)}', _print=False)
-
+        
+        self.plot.finish()
         self.verbose(message=f'{time.asctime()} - COMPLETED')
