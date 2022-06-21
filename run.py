@@ -6,8 +6,8 @@ import utils
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='config_yaml/config.yaml')
-    parser.add_argument('--num-epochs', type=int, default=10000)
-    parser.add_argument('--num-gpus', type=int, default=0)
+    parser.add_argument('--num-epochs', type=int, default=1000)
+    parser.add_argument('--num-gpus', type=int, default=1)
     parser.add_argument('--resume-path', type=str, default=None)
     parser.add_argument('--checkpoint-path', type=str, default=None)
     args = parser.parse_args()

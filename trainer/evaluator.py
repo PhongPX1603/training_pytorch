@@ -53,6 +53,6 @@ class Evaluator(nn.Module):
         # Start to evaluate
         print(f'{time.asctime()} - STARTED')
         metrics = self.eval_epoch(evaluator_name='test', dataloader=self.data)
-        messages = [f'{metric_name}: {metric_value}' for metric_name, metric_value in metrics.items()]
-        print(f"\t[Info] {' - '.join(messages)}")
+        messages = [f"\n* {metric_name}:\n{metric_value}\n" for metric_name, metric_value in metrics.items()]
+        print(f"[INFO] {''.join(messages)}")
         print(f'{time.asctime()} - COMPLETED')

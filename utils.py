@@ -1,8 +1,6 @@
 import yaml
-import torch
 
 from importlib import import_module
-from typing import Tuple, List
 
 
 def load_yaml(yaml_file):
