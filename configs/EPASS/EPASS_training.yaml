@@ -182,6 +182,12 @@ logger:
     mode: logging.DEBUG
     format: '''%(asctime)s - %(name)s - %(levelname)s - %(message)s'''
 
+plot:
+  module: handler.plot
+  class: Plot
+  Plot:
+    save_dir: '''checkpoint/EPASS/'''
+
 lr_scheduler:
   module: torch.optim.lr_scheduler
   class: ReduceLROnPlateau
@@ -212,6 +218,7 @@ trainer:
     lr_scheduler: config['lr_scheduler']
     logger: config['logger']
     writer: config['writer']
+    plot: config['plot']
     model_info: config['model_info']
     save_dir: '''checkpoint/EPASS/'''
 
