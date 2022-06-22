@@ -3,6 +3,7 @@ import time
 import torch
 import numpy as np
 import torch.nn as nn
+from tqdm import tqdm
 
 from pathlib import Path
 from datetime import datetime
@@ -55,7 +56,7 @@ class Trainer:
     def train_epoch(self, evaluator_name: str = 'train', dataloader: nn.Module = None) -> Dict[str, float]:
         self.model.train()
         self.metric.started(evaluator_name)
-        for batch in dataloader:
+        for batch in tqdm(dataloader, total=len(dataloader)):
             self.optim.zero_grad()
             params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
             # tensorboard data
