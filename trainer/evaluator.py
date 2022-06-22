@@ -27,7 +27,7 @@ class Evaluator(nn.Module):
         self.model.eval()
         self.metric.started(evaluator_name)
         with torch.no_grad():
-            for batch in dataloader:
+            for batch in tqdm(dataloader, total=len(dataloader)):
                 params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
                 params[0] = self.model(params[0])
 
