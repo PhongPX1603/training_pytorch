@@ -4,7 +4,7 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.NATCOM.dataset
+        module: datasets.classification.NATCOM.dataset
         class: DocumentClassification
         DocumentClassification:
           datadirs:
@@ -52,7 +52,7 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.NATCOM.dataset
+        module: datasets.classification.NATCOM.dataset
         class: DocumentClassification
         DocumentClassification:
           datadirs:
@@ -82,7 +82,7 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.NATCOM.dataset
+        module: datasets.classification.NATCOM.dataset
         class: DocumentClassification
         DocumentClassification:
           datadirs:
@@ -108,7 +108,7 @@ data:
       shuffle: False
 
 loss:
-  module: loss.loss
+  module: loss.classification.loss
   class: Loss
   Loss:
     loss_fn:
@@ -119,7 +119,7 @@ loss:
     output_transform: 'lambda x: (x[0], x[1])'
 
 model:
-  module: model.mobilenets
+  module: model.classification.mobilenets
   class: MobileNetV3Small
   MobileNetV3Small:
     num_classes: 9
@@ -157,11 +157,11 @@ metric:
   Metrics:
     metrics:
       accuracy:
-        module: metric.confusion_matrix
+        module: metric.classification.metric_fns
         class: Metric
         Metric:
           metric_fn:
-            module: metric.confusion_matrix
+            module: metric.classification.metric_fns
             class: Accuracy
             Accuracy:
               num_classes: 9
