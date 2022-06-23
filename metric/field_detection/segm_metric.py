@@ -47,6 +47,8 @@ class SegmMetric(MetricBase):
 
             self._sum += metric
             self._num_samples += 1
+        
+        return self._sum
 
     def compute(self):
         return self._sum / self._num_samples
