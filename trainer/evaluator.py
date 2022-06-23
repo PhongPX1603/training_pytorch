@@ -1,12 +1,9 @@
-import os
 import time
 import torch
-import numpy as np
 import torch.nn as nn
 
-from pathlib import Path
-from collections import defaultdict
-from typing import Optional, Callable, Dict, Tuple, List
+from tqdm import tqdm
+from typing import Optional, Callable, Dict
 
 from .utils import prepare_device
 

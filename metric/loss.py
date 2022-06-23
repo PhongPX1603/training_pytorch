@@ -1,5 +1,6 @@
 from typing import Callable
-from .metric import MetricBase
+from .metric_base import MetricBase
+
 
 
 class Loss(MetricBase):
