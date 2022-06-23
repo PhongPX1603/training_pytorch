@@ -1,0 +1,108 @@
+data:
+  test:
+    module: torch.utils.data
+    class: DataLoader
+    DataLoader:
+      dataset:
+        module: datasets.classification.NATCOM.dataset
+        class: DocumentClassification
+        DocumentClassification:
+          datadirs:
+            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/test/'''
+            - '''/extdata/ocr/phungpx/projects/PHUNGPX/classification_pytorch/dataset/multi_classes/document_classification/VEHICLE_REGISTRATION/test/'''
+          classes:
+            CARD_BACK_TYPE_1: 0
+            CARD_FRONT_TYPE_1: 1
+            CARD_BACK_TYPE_2: 2
+            CARD_FRONT_TYPE_2: 3
+            CARD_BACK_TYPE_3: 4
+            CARD_FRONT_TYPE_3: 5 
+            PASSPORT: 6
+            BLX: 7
+            OTHERS: 8
+          image_patterns: ['''*.*g''', '''*.*G''']
+          image_size: (224, 224)
+          inner_size: 256
+      batch_size: 128
+      pin_memory: True
+      num_workers: 12
+      drop_last: False
+      shuffle: False
+
+model:
+  module: model.classification.mobilenets
+  class: MobileNetV3Small
+  MobileNetV3Small:
+    num_classes: 9
+    pretrained: True
+    
+metric:
+  module: metric.classification.metric_base
+  class: Metrics
+  Metrics:
+    metrics:
+      accuracy:
+        module: metric.classification.metric_fns
+        class: Metric
+        Metric:
+          metric_fn:
+            module: metric.classification.metric_fns
+            class: Accuracy
+            Accuracy:
+              num_classes: 9
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      loss:
+        module: metric.classification.loss
+        class: Loss
+        Loss:
+          loss_fn:
+            module: torch.nn
+            class: CrossEntropyLoss
+          output_transform: 'lambda x: (x[0], x[1])'
+      precision:
+        module: metric.classification.metric_fns
+        class: Precision
+        Precision:
+          num_classes: 9
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      recall:
+        module: metric.classification.metric_fns
+        class: Recall
+        Recall:
+          num_classes: 9
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      f1_score:
+        module: metric.classification.metric_fns
+        class: F1Score
+        F1Score:
+          num_classes: 9
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      confusion_matrix:
+        module: metric.classification.metric_fns
+        class: ConfusionMatrix
+        ConfusionMatrix:
+          save_dir: '''checkpoint/NATCOM/'''
+          num_classes:
+            - '''CARD_BACK_TYPE_1'''
+            - '''CARD_FRONT_TYPE_1'''
+            - '''CARD_BACK_TYPE_2'''
+            - '''CARD_FRONT_TYPE_2'''
+            - '''CARD_BACK_TYPE_3'''
+            - '''CARD_FRONT_TYPE_3''' 
+            - '''PASSPORT'''
+            - '''BLX'''
+            - '''OTHERS'''
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+
+evaluator:
+  module: trainer.evaluator
+  class: Evaluator
+  Evaluator:
+    data: config['data']['test']
+    model: config['model']
+    metric: config['metric']
+
+extralibs:
+  torch: torch
+  logging: logging
+  transforms: torchvision.transforms
