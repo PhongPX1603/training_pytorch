@@ -241,16 +241,30 @@ metric:
             MultiDice:
               class_weight_alpha: 0.70
               output_transform: 'lambda x: (x[0], x[1])'
-      segm_metrics:
-        module: metric.metric_base
-        class: Metrics
-        Metrics:
-          metrics:
-            module: metric.field_detection.segm_metric
-            class: SegmMetric
-            SegmMetric:
-              metric_name: '''mean_pixel_accuracy'''
-              output_transform: 'lambda x: (x[0], x[1], x[2])'
+      pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_iou:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      frequence_weighted_IU:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
 
 
 trainer:
