@@ -1,4 +1,12 @@
 import torch
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from datetime import datetime
+from pathlib import Path
+from typing import Any, List, Callable
+
 from ..metric_base import MetricBase
 
 
@@ -31,6 +39,7 @@ class SegmMetric(MetricBase):
         targets = targets.to(preds.dtype).unsqueeze(dim=1)  # B, 1, H, W
         preds = torch.argmax(preds, dim=1, keepdims=True).to(targets.dtype)  # B, 1, H, W
 
+        value = 0
         for i in range(len(image_sizes)):
             pred, target, image_size = preds[i:i + 1], targets[i:i + 1], image_sizes[i]
             pred = torch.nn.functional.interpolate(pred, size=image_size[::-1], mode='nearest')  # 1, 1, H, W
@@ -45,10 +54,11 @@ class SegmMetric(MetricBase):
             elif self.metric_name == 'frequence_weighted_IU':
                 metric = self._frequency_weighted_IU(pred, target)
 
+            value += metric
             self._sum += metric
             self._num_samples += 1
         
-        return self._sum
+        return value
 
     def compute(self):
         return self._sum / self._num_samples
@@ -64,7 +74,7 @@ class SegmMetric(MetricBase):
         pred_categories = torch.unique(pred)
         true_categories = torch.unique(target)
         categories = torch.unique(torch.cat([true_categories, pred_categories], dim=0))
-
+        
         sum_n_ii, sum_t_i = 0, 0
         for category in categories:
             sum_n_ii += ((target == category) & (pred == category)).sum().item()
@@ -146,3 +156,41 @@ class SegmMetric(MetricBase):
         fw_iou = sum(freq_ious) / sum_k_t_k
 
         return fw_iou
+    
+class ConfusionMatrix(MetricBase):
+    def __init__(self, save_dir: str, classes: List[str], output_transform: Callable = lambda x: x):
+        super(ConfusionMatrix, self).__init__(output_transform)
+        self.save_dir = Path(save_dir) / datetime.now().strftime(r'%y%m%d%H%M') / 'plot'
+        if not self.save_dir.exists():
+            self.save_dir.mkdir(parents=True)
+        self.num_classes = len(classes)
+        self.classes = classes
+
+    def reset(self):
+        self.confusion_matrix = torch.zeros(size=(self.num_classes, self.num_classes), dtype=torch.int16)
+
+    def update(self, output: Any) -> None:
+        preds, targets = output
+        targets = targets.to(preds.dtype).unsqueeze(dim=1)
+        preds = torch.argmax(preds, dim=1, keepdims=True).to(targets.dtype)
+        for target, pred in zip(targets, preds):
+            target = target.squeeze(0).squeeze(0)
+            pred = pred.squeeze(0).squeeze(0)
+            print(target.shape, pred.shape)
+            for tar, pre in zip(target.view(-1), pred.view(-1)):
+                self.confusion_matrix[tar.long(), pre.long()] += 1
+        
+    def compute(self):
+        # plt.figure(figsize=(15,10))
+
+        # class_names = self.classes
+        # df_cm = pd.DataFrame(self.confusion_matrix, index=class_names, columns=class_names).astype(int)
+        # heatmap = sns.heatmap(df_cm, annot=True, fmt="d")
+
+        # heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right',fontsize=15)
+        # heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right',fontsize=15)
+        # plt.ylabel('True label')
+        # plt.xlabel('Predicted label')
+        # plt.savefig(str(self.save_dir.joinpath(f'confusion_matrix.png')))
+        
+        return self.confusion_matrix
