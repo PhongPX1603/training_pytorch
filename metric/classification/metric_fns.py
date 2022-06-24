@@ -85,7 +85,7 @@ class F1Score(nn.Module):
 class ConfusionMatrix(MetricBase):
     def __init__(self, save_dir: str, classes: List[str], output_transform: Callable = lambda x: x):
         super(ConfusionMatrix, self).__init__(output_transform)
-        self.save_dir = Path(save_dir) / datetime.now().strftime(r'%y%m%d%H%M') / 'plot'
+        self.save_dir = Path(save_dir)
         if not self.save_dir.exists():
             self.save_dir.mkdir(parents=True)
         self.num_classes = len(classes)

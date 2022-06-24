@@ -4,23 +4,23 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: dataset.classification.NATCOM.dataset
-        class: DocumentClassification
-        DocumentClassification:
-          datadirs:
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/test/'''
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/classification_pytorch/dataset/multi_classes/document_classification/VEHICLE_REGISTRATION/test/'''
+        module: dataset.rotation.rotation_dataset
+        class: DocOrientationDataset
+        DocOrientationDataset:
+          data_dirs:
+            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/test'''
           classes:
-            CARD_BACK_TYPE_1: 0
-            CARD_FRONT_TYPE_1: 1
-            CARD_BACK_TYPE_2: 2
-            CARD_FRONT_TYPE_2: 3
-            CARD_BACK_TYPE_3: 4
-            CARD_FRONT_TYPE_3: 5 
-            PASSPORT: 6
-            BLX: 7
-            OTHERS: 8
-          image_patterns: ['''*.*g''', '''*.*G''']
+            CARD_FRONT_TYPE_1: 0
+            CARD_BACK_TYPE_1: 1
+          image_patterns:
+            - '''**/*_quad.jpg'''
+            - '''**/*_quad.png'''
+            - '''**/*_quad.jpeg'''
+            - '''**/*_quad.JPG'''
+            - '''**/*_quad.PNG'''
+            - '''**/*_quad.JPEG'''
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
           image_size: (224, 224)
           inner_size: 256
       batch_size: 128
@@ -33,7 +33,7 @@ model:
   module: model.classification.mobilenets
   class: MobileNetV3Small
   MobileNetV3Small:
-    num_classes: 9
+    num_classes: 4
     pretrained: True
     
 metric:
@@ -49,7 +49,7 @@ metric:
             module: metric.classification.metric_fns
             class: Accuracy
             Accuracy:
-              num_classes: 9
+              num_classes: 4
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       loss:
         module: metric.loss
@@ -63,35 +63,30 @@ metric:
         module: metric.classification.metric_fns
         class: Precision
         Precision:
-          num_classes: 9
+          num_classes: 4
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       recall:
         module: metric.classification.metric_fns
         class: Recall
         Recall:
-          num_classes: 9
+          num_classes: 4
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       f1_score:
         module: metric.classification.metric_fns
         class: F1Score
         F1Score:
-          num_classes: 9
+          num_classes: 4
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       confusion_matrix:
         module: metric.classification.metric_fns
         class: ConfusionMatrix
         ConfusionMatrix:
-          save_dir: '''checkpoint/classification/NATCOM/2206211332/'''
+          save_dir: '''checkpoint/rotation/NATCOM/2206231539/'''
           classes:
-            - '''CARD_BACK_TYPE_1'''
-            - '''CARD_FRONT_TYPE_1'''
-            - '''CARD_BACK_TYPE_2'''
-            - '''CARD_FRONT_TYPE_2'''
-            - '''CARD_BACK_TYPE_3'''
-            - '''CARD_FRONT_TYPE_3''' 
-            - '''PASSPORT'''
-            - '''BLX'''
-            - '''OTHERS'''
+            - '''1'''
+            - '''2'''
+            - '''3'''
+            - '''4'''
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
 
 evaluator:

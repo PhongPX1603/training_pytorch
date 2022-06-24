@@ -4,46 +4,62 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.field_detection.regiondataset
+        module: dataset.field_detection.regiondataset
         class: RegionDataset
         RegionDataset:
-          datadirs:
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/train/'''
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/classification_pytorch/dataset/multi_classes/document_classification/VEHICLE_REGISTRATION/train/'''
+          dirname: '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM_REUP/BLX/train/BLX/'''
           classes:
-            CARD_BACK_TYPE_1: 0
-            CARD_FRONT_TYPE_1: 1
-            CARD_BACK_TYPE_2: 2
-            CARD_FRONT_TYPE_2: 3
-            CARD_BACK_TYPE_3: 4
-            CARD_FRONT_TYPE_3: 5 
-            PASSPORT: 6
-            BLX: 7
-            OTHERS: 8
-          image_patterns: ['''*.*g''', '''*.*G''']
-          image_size: (224, 224)
-          inner_size: 256
-          max_transforms: 10
-          required_transforms:
-            - 'iaa.Grayscale(alpha=[0, 1])'
-          optional_transforms:
-            - 'iaa.Add(value=(-50, 50), per_channel=True)'
-            - 'iaa.AdditiveGaussianNoise(loc=(-5, 5), scale=10, per_channel=True)'
-            - 'iaa.Dropout(p=(0, 0.2))'
-            - 'iaa.GammaContrast()'
-            - 'iaa.JpegCompression(compression=(0, 50))'
-            - 'iaa.GaussianBlur(sigma=(0, 2))'
-            - 'iaa.MotionBlur()'
-            - 'iaa.AddToHueAndSaturation(value=(-50, 50))'
-            - 'iaa.PerspectiveTransform(scale=(0, 0.1))'
-            - 'iaa.Pad(percent=(0, 0.1))'
-            - 'iaa.Crop(percent=(0, 0.2))'
-            - 'iaa.Grayscale(alpha=(0, 1))'
-            - 'iaa.ChangeColorTemperature()'
-            - 'iaa.Clouds()'
-      batch_size: 128
+            BACKGROUND: [[0, 0, 0], 0, False, False]  # color, class_id, reduce_height, reduce_width
+            HEADING: [[175, 153, 144], 1, True, False]
+            V_DOSS: [[75, 25, 230], 2, True, False]
+            V_ID: [[48, 130, 245], 3, True, False]
+            V_NAME: [[128, 128, 0], 4, True, False]
+            V_AD: [[0, 101, 255], 5, True, False]
+            V_BD: [[100, 150, 255], 6, True, False]
+            V_SEX: [[25, 225, 225], 7, True, False]
+            V_PI: [[75, 180, 60], 8, True, False]
+            V_DE: [[180, 215, 255], 9, True, False]
+            FIGURE: [[0, 0, 255], 10, False, False]
+          image_size: (384, 384)
+          # transforms: '[
+          #         iaa.Add(value=(-100, 100), per_channel=True),
+          #         iaa.GaussianBlur(sigma=(0, 1)),
+          #         iaa.MotionBlur(),
+          #         iaa.Affine(rotate=(0, 360), shear=(-20, 20), fit_output=True),
+          #         iaa.PerspectiveTransform(scale=(0, 0.1)),
+          #         iaa.Crop(percent=(0, 0.1)),
+          #         iaa.Pad(percent=(0, 0.1)),
+          #         iaa.JpegCompression(compression=(0, 30)),
+          #         iaa.Rot90(k=[0, 1, 2, 3], keep_size=False),
+          #         iaa.Fliplr(p=0.5),
+          #         iaa.Flipud(p=0.5),
+          #         iaa.ChangeColorTemperature(),
+          #         iaa.Clouds(),
+          #         iaa.Dropout(),
+          #     ]'
+          transforms: '[
+                  iaa.Add(value=(-50, 50), per_channel=True),
+                  iaa.GaussianBlur(sigma=(0, 1)),
+                  iaa.MotionBlur(),
+                  iaa.Affine(rotate=(-10, 10), shear=(-10, 10), fit_output=True),
+                  iaa.PerspectiveTransform(scale=(0, 0.1)),
+                  iaa.ChangeColorTemperature(),
+                  iaa.Clouds(),
+                  iaa.Grayscale(alpha=[0.0, 1.0]),
+              ]'
+          # require_transforms: '[
+          #         iaa.Rot90(k=[0, 1, 3, 4], keep_size=False),
+          #     ]'
+          image_pattern: '''**/*.*g'''
+          mask_pattern: '''**/*.json'''
+          is_textline: False
+          h_factor: [0.5, 0.5]
+          w_factor: [0, -0.02]
+          is_pad_to_square: False
+          ignore_field:  
+      batch_size: 2
       pin_memory: True
-      num_workers: 12
+      num_workers: 32
       drop_last: False
       shuffle: True
 
@@ -52,93 +68,94 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.NATCOM.dataset
-        class: DocumentClassification
-        DocumentClassification:
-          datadirs:
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/train'''
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/classification_pytorch/dataset/multi_classes/document_classification/VEHICLE_REGISTRATION/train/'''
+        module: dataset.field_detection.regiondataset
+        class: RegionDataset
+        RegionDataset:
+          dirname: '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM_REUP/BLX/train/BLX/'''
           classes:
-            CARD_BACK_TYPE_1: 0
-            CARD_FRONT_TYPE_1: 1
-            CARD_BACK_TYPE_2: 2
-            CARD_FRONT_TYPE_2: 3
-            CARD_BACK_TYPE_3: 4
-            CARD_FRONT_TYPE_3: 5 
-            PASSPORT: 6
-            BLX: 7
-            OTHERS: 8
-          image_patterns: ['''*.*g''', '''*.*G''']
-          image_size: (224, 224)
-          inner_size: 256
-      batch_size: 128
+            BACKGROUND: [[0, 0, 0], 0, False, False]  # color, class_id, reduce_height, reduce_width
+            HEADING: [[175, 153, 144], 1, True, False]
+            V_DOSS: [[75, 25, 230], 2, True, False]
+            V_ID: [[48, 130, 245], 3, True, False]
+            V_NAME: [[128, 128, 0], 4, True, False]
+            V_AD: [[0, 101, 255], 5, True, False]
+            V_BD: [[100, 150, 255], 6, True, False]
+            V_SEX: [[25, 225, 225], 7, True, False]
+            V_PI: [[75, 180, 60], 8, True, False]
+            V_DE: [[180, 215, 255], 9, True, False]
+            FIGURE: [[0, 0, 255], 10, False, False]
+          image_size: (384, 384)
+          image_pattern: '''**/*.*g'''
+          mask_pattern: '''**/*.json'''
+          is_textline: False
+          h_factor: [0.5, 0.5]
+          w_factor: [0, -0.02]
+          is_pad_to_square: False
+          ignore_field:  
+      batch_size: 4
       pin_memory: True
-      num_workers: 12
+      num_workers: 32
       drop_last: False
-      shuffle: False
+      shuffle: True
 
   valid:
     module: torch.utils.data
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.NATCOM.dataset
-        class: DocumentClassification
-        DocumentClassification:
-          datadirs:
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM2/valid/'''
-            - '''/extdata/ocr/phungpx/projects/PHUNGPX/classification_pytorch/dataset/multi_classes/document_classification/VEHICLE_REGISTRATION/valid/'''
+        module: dataset.field_detection.regiondataset
+        class: RegionDataset
+        RegionDataset:
+          dirname: '''/extdata/ocr/phungpx/projects/PHUNGPX/semantic_segmentation_pytorch/dataset/NATCOM_REUP/BLX/valid/BLX/'''
           classes:
-            CARD_BACK_TYPE_1: 0
-            CARD_FRONT_TYPE_1: 1
-            CARD_BACK_TYPE_2: 2
-            CARD_FRONT_TYPE_2: 3
-            CARD_BACK_TYPE_3: 4
-            CARD_FRONT_TYPE_3: 5 
-            PASSPORT: 6
-            BLX: 7
-            OTHERS: 8
-          image_patterns: ['''*.*g''', '''*.*G''']
-          image_size: (224, 224)
-          inner_size: 256
-      batch_size: 128
+            BACKGROUND: [[0, 0, 0], 0, False, False]  # color, class_id, reduce_height, reduce_width
+            HEADING: [[175, 153, 144], 1, True, False]
+            V_DOSS: [[75, 25, 230], 2, True, False]
+            V_ID: [[48, 130, 245], 3, True, False]
+            V_NAME: [[128, 128, 0], 4, True, False]
+            V_AD: [[0, 101, 255], 5, True, False]
+            V_BD: [[100, 150, 255], 6, True, False]
+            V_SEX: [[25, 225, 225], 7, True, False]
+            V_PI: [[75, 180, 60], 8, True, False]
+            V_DE: [[180, 215, 255], 9, True, False]
+            FIGURE: [[0, 0, 255], 10, False, False]
+          image_size: (384, 384)
+          image_pattern: '''**/*.*g'''
+          mask_pattern: '''**/*.json'''
+          is_textline: False
+          h_factor: [0.5, 0.5]
+          w_factor: [0, -0.02]
+          is_pad_to_square: False
+          ignore_field:
+      batch_size: 4
       pin_memory: True
-      num_workers: 12
+      num_workers: 32
       drop_last: False
-      shuffle: False
+      shuffle: True
 
 loss:
-  module: loss.loss
-  class: Loss
-  Loss:
-    loss_fn:
-      module: torch.nn
-      class: CrossEntropyLoss
-      CrossEntropy:
-        weight: "torch.tensor([0.117141, 0.1000071, 0.1206103, 0.1039012, 0.5260796, 0.1089989, 0.1189111, 0.1022019, 0.104149]).to('cuda')"
+  module: loss.field_detection.dice
+  class: MultiDice
+  MultiDice:
+    class_weight_alpha: 0.70
     output_transform: 'lambda x: (x[0], x[1])'
-
+  
 model:
-  module: model.mobilenets
-  class: MobileNetV3Small
-  MobileNetV3Small:
-    num_classes: 9
-    pretrained: True
-
-# optim:
-#   module: torch.optim
-#   class: SGD
-#   SGD:
-#     params: config['model'].parameters()
-#     lr: 0.001
-#     momentum: 0.9
+  module: model.field_detection.fcn
+  class: FCN
+  FCN:
+    backbone: '''resnet50'''
+    backbone_fixed: False
+    pretrained_backbone: True
+    replace_stride_with_dilation: [True, True, True]
+    num_classes: 11
 
 optim:
   module: torch.optim
   class: Adam
   Adam:
     params: config['model'].parameters()
-    lr: 0.0001
+    lr: 0.001
     amsgrad: True
 
 early_stopping:
@@ -150,42 +167,18 @@ early_stopping:
     delta: 0
     mode: '''min'''
     score_name: '''loss'''
-    
-metric:
-  module: metric.metric_base
-  class: Metrics
-  Metrics:
-    metrics:
-      accuracy:
-        module: metric.metric_fns
-        class: Metric
-        Metric:
-          metric_fn:
-            module: metric.metric_fns
-            class: Accuracy
-            Accuracy:
-              num_classes: 9
-          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
-      loss:
-        module: metric.loss
-        class: Loss
-        Loss:
-          loss_fn:
-            module: torch.nn
-            class: CrossEntropyLoss
-          output_transform: 'lambda x: (x[0], x[1])'
 
 writer:
   module: handler.writer
   class: Writer
   Writer:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/field_detection/NATCOM/'''
 
 logger:
   module: handler.logger
   class: Logger
   Logger:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/field_detection/NATCOM/'''
     mode: logging.DEBUG
     format: '''%(asctime)s - %(name)s - %(levelname)s - %(message)s'''
 
@@ -193,7 +186,7 @@ plot:
   module: handler.plot
   class: Plot
   Plot:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/field_detection/NATCOM/'''
 
 lr_scheduler:
   module: torch.optim.lr_scheduler
@@ -210,7 +203,48 @@ model_info:
   class: ModelInfo
   ModelInfo:
     verbose: True
-    input_shape: '(224, 224, 3)'
+    input_shape: '(384, 384, 3)'
+
+metric:
+  module: metric.metric_base
+  class: Metrics
+  Metrics:
+    metrics:
+      loss:
+        module: metric.loss
+        class: Loss
+        Loss:
+          loss_fn: 
+            module: loss.field_detection.dice
+            class: MultiDice
+            MultiDice:
+              class_weight_alpha: 0.70
+              output_transform: 'lambda x: (x[0], x[1])'
+      pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_iou:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      frequence_weighted_IU:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+
 
 trainer:
   module: trainer.trainer
@@ -227,7 +261,7 @@ trainer:
     writer: config['writer']
     plot: config['plot']
     model_info: config['model_info']
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/field_detection/NATCOM/'''
 
 extralibs:
   torch: torch

@@ -1,0 +1,146 @@
+data:
+  test:
+    module: torch.utils.data
+    class: DataLoader
+    DataLoader:
+      dataset:
+        module: dataset.field_detection.regiondataset
+        class: RegionDataset
+        RegionDataset:
+          dirname: '''/extdata/ocr/thanhptt1/projects/BHYT/field_extraction/dataset/BHYT/test'''
+          classes:
+            BG: [[0, 0, 0], 0]
+            V_NAME: [[0, 0, 255], 1]
+            V_BD: [[0, 255, 0], 2]
+            V_ID: [[255, 0, 0], 3]
+            V_SEX: [[0, 255, 255], 4]
+            V_A: [[255, 255, 0], 5]
+            V_A1: [[255, 255, 0], 5]
+            V_A2: [[255, 255, 0], 5]
+            V_A3: [[255, 255, 0], 5]
+            V_ISS: [[255, 0, 255], 6]
+            V_TL: [[255, 255, 255], 7]
+            DATE_1: [[128, 0, 0], 8]
+            DATE_2: [[0, 128, 0], 9]
+            DATE_3: [[0, 0, 128], 10]
+            V_RP: [[0, 128, 128], 11]
+            V_RP1: [[0, 128, 128], 11]
+            V_RP2: [[0, 128, 128], 11]
+          image_size: (384, 384)
+          image_pattern: '''**/*.*g'''
+          mask_pattern: '''**/*.json'''
+          is_textline: False
+          h_factor: [0.5, 0.5]
+          w_factor: [0, -0.02]
+          is_pad_to_square: False
+          ignore_field:
+      batch_size: 4
+      pin_memory: True
+      num_workers: 32
+      drop_last: False
+      shuffle: True
+  
+model:
+  module: model.field_detection.fcn
+  class: FCN
+  FCN:
+    backbone: '''resnet50'''
+    backbone_fixed: False
+    pretrained_backbone: True
+    replace_stride_with_dilation: [True, True, True]
+    num_classes: 12
+
+metric:
+  module: metric.metric_base
+  class: Metrics
+  Metrics:
+    metrics:
+      loss:
+        module: metric.loss
+        class: Loss
+        Loss:
+          loss_fn: 
+            module: loss.field_detection.dice
+            class: MultiDice
+            MultiDice:
+              class_weight_alpha: 0.70
+              output_transform: 'lambda x: (x[0], x[1])'
+      pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_pixel_accuracy:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      mean_iou:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      frequence_weighted_IU:
+        module: metric.field_detection.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
+      # precision:
+      #   module: metric.classification.metric_fns
+      #   class: Precision
+      #   Precision:
+      #     num_classes: 12
+      #     output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      # recall:
+      #   module: metric.classification.metric_fns
+      #   class: Recall
+      #   Recall:
+      #     num_classes: 12
+      #     output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      # f1_score:
+      #   module: metric.classification.metric_fns
+      #   class: F1Score
+      #   F1Score:
+      #     num_classes: 12
+      #     output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+      confusion_matrix:
+        module: metric.field_detection.segm_metric
+        class: ConfusionMatrix
+        ConfusionMatrix:
+          save_dir: '''checkpoint/field_detection/BHYT'''
+          classes:
+            - '''BG'''
+            - '''V_NAME'''
+            - '''V_BD'''
+            - '''V_ID'''
+            - '''V_SEX'''
+            - '''V_A'''
+            - '''V_A1'''
+            - '''V_A2'''
+            - '''V_A3'''
+            - '''V_ISS'''
+            - '''V_TL'''
+            - '''DATE_1'''
+            - '''DATE_2'''
+            - '''DATE_3'''
+            - '''V_RP'''
+            - '''V_RP1'''
+            - '''V_RP2'''
+          output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
+
+evaluator:
+  module: trainer.evaluator
+  class: Evaluator
+  Evaluator:
+    data: config['data']['test']
+    model: config['model']
+    metric: config['metric']
+
+extralibs:
+  torch: torch
+  logging: logging
+  transforms: torchvision.transforms
