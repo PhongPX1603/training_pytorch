@@ -179,13 +179,13 @@ writer:
   module: handler.writer
   class: Writer
   Writer:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/classification/NATCOM/'''
 
 logger:
   module: handler.logger
   class: Logger
   Logger:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/classification/NATCOM/'''
     mode: logging.DEBUG
     format: '''%(asctime)s - %(name)s - %(levelname)s - %(message)s'''
 
@@ -193,7 +193,7 @@ plot:
   module: handler.plot
   class: Plot
   Plot:
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/classification/NATCOM/'''
 
 lr_scheduler:
   module: torch.optim.lr_scheduler
@@ -227,7 +227,7 @@ trainer:
     writer: config['writer']
     plot: config['plot']
     model_info: config['model_info']
-    save_dir: '''checkpoint/NATCOM/'''
+    save_dir: '''checkpoint/classification/NATCOM/'''
 
 extralibs:
   torch: torch

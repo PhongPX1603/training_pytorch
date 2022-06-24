@@ -4,7 +4,7 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: datasets.classification.NATCOM.dataset
+        module: dataset.classification.NATCOM.dataset
         class: DocumentClassification
         DocumentClassification:
           datadirs:
@@ -37,7 +37,7 @@ model:
     pretrained: True
     
 metric:
-  module: metric.classification.metric_base
+  module: metric.metric_base
   class: Metrics
   Metrics:
     metrics:
@@ -52,7 +52,7 @@ metric:
               num_classes: 9
           output_transform: 'lambda x: (x[0].softmax(dim=1), x[1])'
       loss:
-        module: metric.classification.loss
+        module: metric.loss
         class: Loss
         Loss:
           loss_fn:
@@ -81,8 +81,8 @@ metric:
         module: metric.classification.metric_fns
         class: ConfusionMatrix
         ConfusionMatrix:
-          save_dir: '''checkpoint/NATCOM/'''
-          num_classes:
+          save_dir: '''checkpoint/classification/NATCOM/2206211332/'''
+          classes:
             - '''CARD_BACK_TYPE_1'''
             - '''CARD_FRONT_TYPE_1'''
             - '''CARD_BACK_TYPE_2'''
