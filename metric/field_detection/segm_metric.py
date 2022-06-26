@@ -1,5 +1,6 @@
 import torch
 import pandas as pd
+from metric.classification.metric_fns import process
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -29,8 +30,8 @@ class SegmMetric(MetricBase):
         Outputs:
             ...
         '''
-        assert self.metric_name in ['pixel_accuracy', 'mean_pixel_accuracy',
-                                    'mean_iou', 'frequence_weighted_IU'], f'metric: {self.metric_name} not supported'
+        # assert self.metric_name in ['pixel_accuracy', 'mean_pixel_accuracy',
+        #                             'mean_iou', 'frequence_weighted_IU'], f'metric: {self.metric_name} not supported'
 
         preds, targets, image_infos = output
         _, image_sizes = image_infos
@@ -41,7 +42,7 @@ class SegmMetric(MetricBase):
 
         value = 0
         for i in range(len(image_sizes)):
-            pred, target, image_size = preds[i:i + 1], targets[i:i + 1], image_sizes[i]
+            pred, target, image_size = preds[i:i + 1], targets[i:i + 1], image_sizes[i]     # 1, 1, H, W
             pred = torch.nn.functional.interpolate(pred, size=image_size[::-1], mode='nearest')  # 1, 1, H, W
             target = torch.nn.functional.interpolate(target, size=image_size[::-1], mode='nearest')  # 1, 1, H, W
             pred, target = pred.squeeze(dim=0).squeeze(dim=0), target.squeeze(dim=0).squeeze(dim=0)  # pred, target: H, w
@@ -53,18 +54,55 @@ class SegmMetric(MetricBase):
                 metric = self._mean_IU(pred, target)
             elif self.metric_name == 'frequence_weighted_IU':
                 metric = self._frequency_weighted_IU(pred, target)
+            elif self.metric_name == 'precision':
+                metric = self._precision(pred, target)
+            elif self.metric_name == 'recall':
+                metric = self._recall(pred, target)
 
             value += metric
             self._sum += metric
             self._num_samples += 1
         
-        return value
+        return value / len(image_sizes)        
 
     def compute(self):
         return self._sum / self._num_samples
 
+
+    def process(self, pred, target, categories):
+        tp = torch.empty(len(categories))
+        fp = torch.empty(len(categories))
+        fn = torch.empty(len(categories))
+        tn = torch.empty(len(categories))
+        for i in range(categories.shape[0]):
+            tp[i] = ((target == categories[i]) & (pred == categories[i])).sum().item()
+            fp[i] = ((target == categories[i]) & (pred != categories[i])).sum().item()
+            fn[i] = ((target != categories[i]) & (pred == categories[i])).sum().item()
+            tn[i] = ((target != categories[i]) & (pred != categories[i])).sum().item()
+        return tp, fp, fn, tn
+    
+    
+    def _precision(self, pred, target):
+        pred_categories = torch.unique(pred)
+        true_categories = torch.unique(target)
+        categories = torch.unique(torch.cat([true_categories, pred_categories], dim=0))
+        tp, fp, _, _ = self.process(pred, target, categories)
+        
+        precision = tp / (tp + fp)
+        return precision.sum().item() / len(precision)
+    
+    def _recall(self, pred, target):
+        pred_categories = torch.unique(pred)
+        true_categories = torch.unique(target)
+        categories = torch.unique(torch.cat([true_categories, pred_categories], dim=0))
+        tp, _, fn, _ = self.process(pred, target, categories)
+        
+        recall = tp / (tp + fn)
+        return recall.sum().item() / len(recall)
+
+
     def _pixel_accuracy(self, pred, target):
-        '''pixel_accuracy = sum_i(n_ii) / sum_i(t_i)
+        '''pixel_accuracy = (tp + tn) / (tp + tn + fp + fn)
         Args:
             pred: torch.Tensor [H, W]
             target: torch.Tensor [H, W]
@@ -74,15 +112,30 @@ class SegmMetric(MetricBase):
         pred_categories = torch.unique(pred)
         true_categories = torch.unique(target)
         categories = torch.unique(torch.cat([true_categories, pred_categories], dim=0))
-        
-        sum_n_ii, sum_t_i = 0, 0
-        for category in categories:
-            sum_n_ii += ((target == category) & (pred == category)).sum().item()
-            sum_t_i += (target == category).sum().item()
+        tp, fp, fn, tn = self.process(pred, target, categories)
 
-        pixel_accuracy = sum_n_ii / sum_t_i if sum_t_i != 0 else 0.
+        pixel_accuracy = (tp + tn) / (tp + tn + fp + fn)
+        return pixel_accuracy.sum().item() / len(pixel_accuracy)
+    
+    # def _pixel_accuracy(self, pred, target):
+    #     '''pixel_accuracy = sum_i(n_ii) / sum_i(t_i)
+    #     Args:
+    #         pred: torch.Tensor [H, W]
+    #         target: torch.Tensor [H, W]
+    #     Outputs:
+    #         pixel_accuracy: float
+    #     '''
+    #     pred_categories = torch.unique(pred)
+    #     true_categories = torch.unique(target)
+    #     categories = torch.unique(torch.cat([true_categories, pred_categories], dim=0))
+    #     sum_n_ii, sum_t_i = 0, 0
+    #     for category in categories:
+    #         sum_n_ii += ((target == category) & (pred == category)).sum().item()    # 
+    #         sum_t_i += (target == category).sum().item()
 
-        return pixel_accuracy
+    #     pixel_accuracy = sum_n_ii / sum_t_i if sum_t_i != 0 else 0.
+
+    #     return pixel_accuracy
 
     def _mean_pixel_accuracy(self, pred, target):
         '''mean_pixel_accuracy = (1/n_cl) * sum_i(n_ii / t_i)
@@ -121,10 +174,9 @@ class SegmMetric(MetricBase):
 
         ious = []
         for category in categories:
-            n_ii = ((target == category) & (pred == category)).sum().item()
-            t_i = (target == category).sum().item()
-            n_ij = (pred == category).sum().item()
-            iou = n_ii / (t_i + n_ij - n_ii)
+            inter = ((target == category) & (pred == category)).sum().item()
+            union = (target == category).sum().item() + (pred == category).sum().item() - inter
+            iou = inter / union
             ious.append(iou)
 
         mean_iou = sum(ious) / len(ious) if len(ious) != 0 else 0.
@@ -156,6 +208,8 @@ class SegmMetric(MetricBase):
         fw_iou = sum(freq_ious) / sum_k_t_k
 
         return fw_iou
+    
+    
     
 class ConfusionMatrix(MetricBase):
     def __init__(self, save_dir: str, classes: List[str], output_transform: Callable = lambda x: x):
