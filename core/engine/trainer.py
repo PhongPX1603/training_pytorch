@@ -120,7 +120,7 @@ class Trainer:
         self.verbose(message=f'{message}', _print=_print)
 
     def test(self) -> None:
-        self.verbose(message='\n____________________________________TESTING____________________________________\n')
+        self.verbose(message=f"{'-' * 60} * TESTING * {'-' * 60}\n")
         # Load weight
         checkpoint_path = self.training_info['checkpoint_path']
         state_dict = torch.load(f=checkpoint_path, map_location=self.device)
@@ -140,7 +140,7 @@ class Trainer:
         checkpoint_path: Optional[str] = None,
         num_gpus: int = 0,
     ) -> None:
-        self.verbose(message='\n____________________________________TRAINING___________________________________\n')
+        self.verbose(message=f"{'-' * 60} * TRAINING * {'-' * 60}\n")
         # Set Device for Model: prepare for (multi-device) GPU training
         self.device, gpu_indices = prepare_device(num_gpus)
         self.model = self.model.to(self.device)
@@ -179,6 +179,7 @@ class Trainer:
         # Start to train
         self.verbose(message=f'{time.asctime()} - STARTED')
         for epoch in range(start_epoch, num_epochs + start_epoch):
+            self.verbose(message='--' * 70)
             self.verbose(message=f'Epoch #{epoch} - {time.asctime()}')
             train_metrics = self.train_epoch(evaluator_name='train', dataloader=self.data['train'])
             train_eval_metrics = self.eval_epoch(evaluator_name='train_eval', dataloader=self.data['train_eval'])

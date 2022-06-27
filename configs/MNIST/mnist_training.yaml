@@ -131,6 +131,7 @@ trainer:
   module: core.engine
   class: Trainer
   Trainer:
+    project_name: '''MNIST'''
     data:
       train: config['data']['train']
       train_eval: config['data']['train']
