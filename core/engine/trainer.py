@@ -1,14 +1,14 @@
 import os
 import time
-import torch
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional
+
 import numpy as np
+import torch
 import torch.nn as nn
 from tqdm import tqdm
-
-from pathlib import Path
-from datetime import datetime
-from collections import defaultdict
-from typing import Optional, Callable, Dict, Any
 
 from .utils import prepare_device
 
@@ -56,7 +56,7 @@ class Trainer:
 
         # training information
         self.training_info = dict()
-        
+
     def train_epoch(self, evaluator_name: str = 'train', dataloader: nn.Module = None) -> Dict[str, float]:
         self.model.train()
         self.metric.started(evaluator_name)
@@ -70,10 +70,12 @@ class Trainer:
 
             # log learning_rate
             self.writer.add_scalar(
-                name='learning_rate', value=self.optim.param_groups[0]['lr'], step=self.iteration_counters[evaluator_name]
+                name='learning_rate',
+                value=self.optim.param_groups[0]['lr'],
+                step=self.iteration_counters[evaluator_name]
             )
- 
-            iteration_metric = self.metric.iteration_completed(output=params)  
+
+            iteration_metric = self.metric.iteration_completed(output=params)
 
             for metric_name, metric_value in iteration_metric.items():
                 self.writer.add_scalar(
@@ -167,8 +169,8 @@ class Trainer:
             mode = self.early_stopping.mode
             score_name = self.early_stopping.score_name
             best_score = -np.Inf if mode == 'min' else 0
-            
-        #multi GPUs
+
+        # Multi GPUs
         self.model = self.model.to(self.device)
         if len(gpu_indices) > 1:
             self.model = torch.nn.DataParallel(self.model)
@@ -218,7 +220,7 @@ class Trainer:
 
             score = -valid_metrics[f'valid_{score_name}'] if mode == 'min' else valid_metrics[f'valid_{score_name}']
             if score > best_score:
-                best_score = score                
+                best_score = score
                 if _checkpoint_path.exists():
                     os.remove(str(_checkpoint_path))
                 _checkpoint_path = self.save_dir / f'best_model_{epoch}_{score_name}_{best_score}.pth'
@@ -235,12 +237,13 @@ class Trainer:
         self.plotter.draw()
         self.verbose(message=f'{time.asctime()} - COMPLETED')
 
-    def __call__(self,
-        num_epochs: int,
+    def __call__(
+        self,
+        num_epochs: int = 1,
         resume_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
-        num_gpus: int = 0,
-    ):
+        num_gpus: int = 0
+    ) -> None:
         self.train(num_epochs, resume_path, checkpoint_path, num_gpus)
         if self.data.get('test', None) is not None:
             self.test()

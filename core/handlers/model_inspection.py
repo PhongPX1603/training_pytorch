@@ -1,6 +1,9 @@
-from torch import nn
-from thop.profile import profile  # using to get params and flops
+import copy
 from typing import Callable, Tuple
+
+import torch
+from thop.profile import profile  # using to get params and flops
+from torch import nn
 
 
 class ModelInspection:
@@ -23,8 +26,8 @@ class ModelInspection:
             message += '\tModel Detail:\n'
             for i, (name, params) in enumerate(model.named_parameters()):
                 name = name.replace('module_list.', '')
-                message += f"\t  [...] layer: {i}, name: {name}, gradient: {params.requires_grad}, params: {params.numel()}, "
-                message += f"shape: {list(params.shape)}, mu: {params.mean().item()}, sigma: {params.std().item()}\n"
+                message += f'\t  [...] layer: {i}, name: {name}, gradient: {params.requires_grad}, params: {params.numel()}, '
+                message += f'shape: {list(params.shape)}, mu: {params.mean().item()}, sigma: {params.std().item()}\n'
         # get FLOPs
         try:
             device = next(model.parameters()).device
@@ -34,9 +37,9 @@ class ModelInspection:
         except (ImportError, Exception):
             total_ops, total_params = '-', '-'
 
-        message += f"\tModel Summary:\n"
-        message += f"\t  [...] Layers: {len(list(model.modules()))}, Parameters: {n_params}, Gradients: {n_grads}\n"
-        message += f"\t  [...] Params (M): {total_params}, MACs (G): {total_ops}\n"
+        message += '\tModel Summary:\n'
+        message += f'\t  [...] Layers: {len(list(model.modules()))}, Parameters: {n_params}, Gradients: {n_grads}\n'
+        message += f'\t  [...] Params (M): {total_params}, MACs (G): {total_ops}\n'
 
         logger.info(message)
         print(message)

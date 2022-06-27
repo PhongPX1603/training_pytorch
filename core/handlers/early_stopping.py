@@ -15,7 +15,7 @@ class EarlyStopping:
         Args:
             patience (int): How long to wait after last time validation loss improved. Default: 7
             delta (float): Minimum change in the monitored quantity to qualify as an improvement. Default: 0
-            mode (str): 'min' or 'max' - 'min' applied to loss and 'max' applied to accuracy, for example. Default: min 
+            mode (str): 'min' or 'max' - 'min' applied to loss and 'max' applied to accuracy, for example. Default: min
             score_name (str): 'loss' or 'accuracy' to take value in metrics
             evaluator_name (str): 'train' or 'train_eval' or 'valid' ... to get value.
         """

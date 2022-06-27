@@ -1,5 +1,6 @@
+from typing import Dict
+
 from torch.optim import lr_scheduler
-from typing  import Dict
 
 
 class ReduceLROnPlateau:

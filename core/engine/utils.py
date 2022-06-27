@@ -1,8 +1,8 @@
-import copy
 import time
+from typing import List, Tuple
+
 import torch
 from torch import nn
-from typing import List, Tuple
 
 
 def prepare_device(n_gpu_use: int = 0) -> Tuple[str, List[int]]:

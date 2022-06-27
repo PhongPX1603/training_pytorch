@@ -1,9 +1,9 @@
 import time
+from typing import Callable, Dict, Optional
+
 import torch
 import torch.nn as nn
-
 from tqdm import tqdm
-from typing import Optional, Callable, Dict
 
 from .utils import prepare_device
 
@@ -28,7 +28,7 @@ class Evaluator(nn.Module):
                 params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
                 params[0] = self.model(params[0])
 
-                iteration_metric = self.metric.iteration_completed(output=params)    
+                _ = self.metric.iteration_completed(output=params)
 
         return self.metric.epoch_completed()
 
@@ -50,6 +50,6 @@ class Evaluator(nn.Module):
         # Start to evaluate
         print(f'{time.asctime()} - STARTED')
         metrics = self.eval_epoch(evaluator_name='test', dataloader=self.data)
-        messages = [f"\n* {metric_name}:\n{metric_value}\n" for metric_name, metric_value in metrics.items()]
+        messages = [f'\n* {metric_name}:\n{metric_value}\n' for metric_name, metric_value in metrics.items()]
         print(f"[INFO] {''.join(messages)}")
         print(f'{time.asctime()} - COMPLETED')
