@@ -11,6 +11,9 @@ from typing import Callable, Any, List
 from ..handlers.evaluator import MetricBase
 
 
+__all__ = ['Accuracy', 'ConfusionMatrix']
+
+
 def stats(preds, targets, num_classes):
     '''Compute TP, FP, FN, TN.
         Args:
@@ -165,33 +168,3 @@ class Recall(MetricBase):
         for i in range(self.num_classes):
             recall.append(self.true_pos[i].sum().item() / (self.true_pos[i].sum().item() + self.false_neg[i].sum().item() + eps))
         return sum(recall) / len(recall)
-    
-    
-class F1Score(MetricBase):
-    def __init__(self, num_classes:int, output_transform: Callable = lambda x: x):
-        super(F1Score, self).__init__(output_transform)
-        self.num_classes = num_classes
-        
-    def reset(self) -> None:
-        self.true_pos = torch.zeros((self.num_classes))
-        self.false_neg = torch.zeros((self.num_classes))
-        self.false_pos = torch.zeros((self.num_classes))
-    
-    def update(self, output: Any):
-        preds, targets = output
-        preds = torch.argmax(preds, dim=1)
-        tp, fp, fn, _ = stats(preds, targets, self.num_classes)
-        for i in range(self.num_classes):
-            self.true_pos[i] += tp[i]
-            self.false_pos[i] += fp[i]
-            self.false_neg[i] += fn[i]
-    
-    def compute(self):
-        eps = 1e-8
-        precision, recall = [], []
-        for i in range(self.num_classes):
-            precision.append(self.true_pos[i].sum().item() / (self.true_pos[i].sum().item() + self.false_pos[i].sum().item() + eps))
-            recall.append(self.true_pos[i].sum().item() / (self.true_pos[i].sum().item() + self.false_neg[i].sum().item() + eps))
-        f1_precision = sum(precision) / len(precision)
-        f1_recall = sum(recall) / len(recall)
-        return 2 * f1_precision * f1_recall / (f1_precision + f1_recall)

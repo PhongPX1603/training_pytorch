@@ -127,11 +127,11 @@ class Trainer:
         self.model.load_state_dict(state_dict=state_dict)
 
         # Start to evaluate
-        print(f'{time.asctime()} - STARTED')
+        self.verbose(message=f'{time.asctime()} - STARTED')
         metrics = self.eval_epoch(evaluator_name='test', dataloader=self.data['test'])
         messages = [f'{metric_name}: {metric_value:.5f}' for metric_name, metric_value in metrics.items()]
-        print(f"[Info] {' - '.join(messages)}")
-        print(f'{time.asctime()} - COMPLETED')
+        self.verbose(message=f"[Info] {' - '.join(messages)}")
+        self.verbose(message=f'{time.asctime()} - COMPLETED')
 
     def train(
         self,
