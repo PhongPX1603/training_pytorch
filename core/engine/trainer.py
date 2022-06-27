@@ -1,8 +1,6 @@
-from distutils.command.config import config
 import os
 import time
 import torch
-import yaml
 import numpy as np
 import torch.nn as nn
 from tqdm import tqdm
@@ -169,6 +167,11 @@ class Trainer:
             mode = self.early_stopping.mode
             score_name = self.early_stopping.score_name
             best_score = -np.Inf if mode == 'min' else 0
+            
+        #multi GPUs
+        self.model = self.model.to(self.device)
+        if len(gpu_indices) > 1:
+            self.model = torch.nn.DataParallel(self.model)
 
         # Initialize checkpoint path for saving checkpoint
         _checkpoint_path = self.save_dir / f'best_model_{start_epoch}_{score_name}_{best_score}.pth'
