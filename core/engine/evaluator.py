@@ -11,16 +11,16 @@ from .utils import prepare_device
 class Evaluator(nn.Module):
     def __init__(
         self,
-        data: nn.Module = None,
-        model: nn.Module = None,
-        metric: Callable = None,
+        data: nn.Module,
+        model: nn.Module,
+        metric: Callable,
     ):
         super(Evaluator, self).__init__()
         self.data = data
         self.model = model
         self.metric = metric
 
-    def eval_epoch(self, evaluator_name: str, dataloader: nn.Module = None) -> Dict[str, float]:
+    def eval_epoch(self, evaluator_name: str, dataloader: nn.Module) -> Dict[str, float]:
         self.model.eval()
         self.metric.started(evaluator_name)
         with torch.no_grad():

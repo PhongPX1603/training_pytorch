@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import Dict
 
 import matplotlib.pyplot as plt
 
@@ -11,12 +12,12 @@ class Plotter:
         if not self.plot_dir.exists():
             self.plot_dir.mkdir(parents=True)
 
-        self.data_plot = defaultdict(list)
+        self.data_plot: Dict[str, list] = defaultdict(list)
 
     def add_scalar(self, monitor: str, value: float) -> None:
         self.data_plot[monitor].append(value)
 
-    def draw(self):
+    def draw(self) -> None:
         for plot_name, plot_value in self.data_plot.items():
             plt.plot(plot_value)
             plt.title(plot_name)

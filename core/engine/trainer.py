@@ -16,19 +16,19 @@ from .utils import prepare_device
 class Trainer:
     def __init__(
         self,
-        project_name: str = None,
-        model: nn.Module = None,
-        data: Dict[str, Callable] = None,
-        loss: nn.Module = None,
-        optim: nn.Module = None,
-        metric: Callable = None,
-        lr_scheduler: nn.Module = None,
-        early_stopping: Callable = None,
+        project_name: str,
+        model: nn.Module,
+        data: Dict[str, Callable],
+        loss: nn.Module,
+        optim: nn.Module,
+        metric: Callable,
+        lr_scheduler: nn.Module,
+        early_stopping: Callable,
+        logger: Callable,
+        writer: Callable,
+        plotter: Callable,
+        save_dir: str,
         model_inspection: Callable = None,
-        logger: Callable = None,
-        writer: Callable = None,
-        plotter: Callable = None,
-        save_dir: str = None
     ):
         super(Trainer, self).__init__()
         self.logger = logger.get_logger(log_name=project_name)
@@ -39,7 +39,6 @@ class Trainer:
         self.metric = metric
         self.lr_scheduler = lr_scheduler
         self.early_stopping = early_stopping
-        self.iteration_counters = defaultdict(int)
 
         # Logger and Tensorboard
         self.writer = writer
@@ -55,9 +54,10 @@ class Trainer:
             self.save_dir.mkdir(parents=True)
 
         # training information
-        self.training_info = dict()
+        self.iteration_counters: Dict[str, int] = defaultdict(int)
+        self.training_info: Dict[str, Any] = dict()
 
-    def train_epoch(self, evaluator_name: str = 'train', dataloader: nn.Module = None) -> Dict[str, float]:
+    def train_epoch(self, evaluator_name: str, dataloader: nn.Module) -> Dict[str, float]:
         self.model.train()
         self.metric.started(evaluator_name)
         for batch in tqdm(dataloader, total=len(dataloader)):
@@ -86,7 +86,7 @@ class Trainer:
 
         return self.metric.epoch_completed()
 
-    def eval_epoch(self, evaluator_name: str, dataloader: nn.Module = None) -> Dict[str, float]:
+    def eval_epoch(self, evaluator_name: str, dataloader: nn.Module) -> Dict[str, float]:
         self.model.eval()
         self.metric.started(evaluator_name)
         with torch.no_grad():

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Any
 
 
 class EarlyStopping:
@@ -28,7 +28,7 @@ class EarlyStopping:
         self.evaluator_name = evaluator_name
         self.score_name = score_name
 
-    def __call__(self, metrics: Dict[str, dict]) -> None:
+    def __call__(self, metrics: Dict[str, Dict[str, Any]]) -> None:
         score = metrics[f'{self.evaluator_name}_{self.score_name}']
         if self.mode == 'min':
             score = -score
