@@ -1,5 +1,8 @@
 # Training Template
 
+# 0. Issues
+- DDP: https://pytorch.org/tutorials/beginner/saving_loading_models.html#saving-torch-nn-dataparallel-models
+
 # 1. Structure
 
 # 2. Usage
