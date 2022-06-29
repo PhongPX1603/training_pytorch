@@ -9,13 +9,13 @@ from torch import nn
 class ModelInspection:
     def __init__(
         self,
-        verbose: bool = False,
-        input_shape: Tuple[int, int, int] = (224, 224, 3)
+        verbose=False,
+        input_shape=(224, 224, 3)  # (H, W, C)
     ) -> None:
         self.verbose = verbose
         self.input_shape = input_shape
 
-    def __call__(self, model: nn.Module, logger: Callable) -> None:
+    def __call__(self, model, logger):
         # the number of parameters
         n_params = sum(param.numel() for param in model.parameters())
         # the number of gradients

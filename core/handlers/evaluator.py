@@ -2,8 +2,12 @@ from abc import ABC, abstractmethod
 from typing import Callable, Dict, Any
 
 
+__all__ = ['MetricBase', 'Metrics']
+
+
 class MetricBase(ABC):
     def __init__(self, output_transform: Callable = lambda x: x):
+        super(MetricBase, self).__init__()
         self.output_transform = output_transform
 
     @abstractmethod
@@ -31,10 +35,7 @@ class MetricBase(ABC):
 
 
 class Metrics:
-    def __init__(
-        self,
-        metrics: Dict[str, Callable],
-    ):
+    def __init__(self, metrics: Dict[str, MetricBase]) -> None:
         super(Metrics, self).__init__()
         self.metrics = metrics
 

@@ -10,5 +10,5 @@ class ReduceLROnPlateau:
         self.evaluator_name = evaluator_name
         self.scheduler = lr_scheduler.ReduceLROnPlateau(optimizer=optim, **kwargs)
 
-    def _step(self, metrics: Dict[str, float]):
+    def _step(self, metrics: Dict[str, float]) -> None:
         self.scheduler.step(metrics[f'{self.evaluator_name}_{self.score_name}'])

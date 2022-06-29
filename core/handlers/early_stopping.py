@@ -19,16 +19,18 @@ class EarlyStopping:
             score_name (str): 'loss' or 'accuracy' to take value in metrics
             evaluator_name (str): 'train' or 'train_eval' or 'valid' ... to get value.
         """
+        self.mode = mode
+        self.delta = delta
         self.patience = patience
+        self.score_name = score_name
+        self.evaluator_name = evaluator_name
+
+        # initialize value
         self.counter = 0
         self.best_score = None
         self.early_stop = False
-        self.delta = delta
-        self.mode = mode
-        self.evaluator_name = evaluator_name
-        self.score_name = score_name
 
-    def __call__(self, metrics: Dict[str, Dict[str, Any]]) -> None:
+    def __call__(self, metrics: Dict[str, Any]) -> None:
         score = metrics[f'{self.evaluator_name}_{self.score_name}']
         if self.mode == 'min':
             score = -score
