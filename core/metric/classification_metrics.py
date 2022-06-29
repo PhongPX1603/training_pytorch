@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -85,13 +85,13 @@ class F1Score(nn.Module):
 
 
 class ConfusionMatrix(MetricBase):
-    def __init__(self, save_dir: str, classes: List[str], output_transform: Callable = lambda x: x):
+    def __init__(self, save_dir: str, classes: Union[int, Dict[int, str]], output_transform: Callable = lambda x: x):
         super(ConfusionMatrix, self).__init__(output_transform)
         self.save_dir = Path(save_dir)
         if not self.save_dir.exists():
             self.save_dir.mkdir(parents=True)
-        self.num_classes = len(classes)
-        self.classes = classes
+        self.num_classes = len(classes) if isinstance(classes, dict) else classes 
+        self.class_names = list(classes.values()) if isinstance(classes, dict) else [str(class_id) for class_id in range(classes)]
 
     def reset(self):
         self.confusion_matrix = torch.zeros(size=(self.num_classes, self.num_classes), dtype=torch.int16)
@@ -104,8 +104,7 @@ class ConfusionMatrix(MetricBase):
 
     def compute(self):
         plt.figure(figsize=(15, 10))
-        class_names = self.classes
-        df_cm = pd.DataFrame(self.confusion_matrix, index=class_names, columns=class_names).astype(int)
+        df_cm = pd.DataFrame(self.confusion_matrix, index=self.class_names, columns=self.class_names).astype(int)
         heatmap = sns.heatmap(df_cm, annot=True, fmt='d')
 
         heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right', fontsize=15)
