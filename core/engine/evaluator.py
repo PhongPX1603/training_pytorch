@@ -41,11 +41,14 @@ class Evaluator(nn.Module):
         self.device, gpu_indices = prepare_device(num_gpus)
         self.model = self.model.to(self.device)
         if len(gpu_indices) > 1:
-            self.model = torch.nn.DataParallel(self.model, device_ids=gpu_indices).module
+            self.model = torch.nn.DataParallel(self.model, device_ids=gpu_indices)
 
         # Load weight
         state_dict = torch.load(f=checkpoint_path, map_location=self.device)
-        self.model.load_state_dict(state_dict=state_dict)
+        if isinstance(self.model, torch.nn.DataParallel):
+            self.model.module.load_state_dict(state_dict=state_dict)
+        else:
+            self.model.load_state_dict(state_dict=state_dict)
 
         # Start to evaluate
         print(f'{time.asctime()} - STARTED')

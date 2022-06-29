@@ -126,7 +126,10 @@ class Trainer:
         # Load weight
         checkpoint_path = self.training_info['checkpoint_path']
         state_dict = torch.load(f=checkpoint_path, map_location=self.device)
-        self.model.load_state_dict(state_dict=state_dict)
+        if isinstance(self.model, torch.nn.DataParallel):
+            self.model.module.load_state_dict(state_dict=state_dict)
+        else:
+            self.model.load_state_dict(state_dict=state_dict)
 
         # Start to evaluate
         self.verbose(message=f'{time.asctime()} - STARTED')
@@ -145,9 +148,6 @@ class Trainer:
         self.verbose(message=f"{'-' * 60} * TRAINING * {'-' * 60}\n")
         # Set Device for Model: prepare for (multi-device) GPU training
         self.device, gpu_indices = prepare_device(num_gpus)
-        self.model = self.model.to(self.device)
-        if len(gpu_indices) > 1:
-            self.model = torch.nn.DataParallel(self.model, device_ids=gpu_indices)
 
         # Load pretrained weight
         if checkpoint_path is not None:
@@ -173,7 +173,7 @@ class Trainer:
         # Multi GPUs
         self.model = self.model.to(self.device)
         if len(gpu_indices) > 1:
-            self.model = torch.nn.DataParallel(self.model)
+            self.model = torch.nn.DataParallel(self.model, device_ids=gpu_indices)
 
         # Initialize checkpoint path for saving checkpoint
         _checkpoint_path = self.save_dir / f'best_model_{start_epoch}_{score_name}_{best_score}.pth'
@@ -206,11 +206,16 @@ class Trainer:
             if self.save_dir.joinpath(f'backup_epoch_{epoch - 1}.pth').exists():
                 os.remove(str(self.save_dir.joinpath(f'backup_epoch_{epoch - 1}.pth')))
 
+            if isinstance(self.model, torch.nn.DataParallel):
+                model_state_dict = self.model.module.state_dict()
+            else:
+                model_state_dict = self.model.state_dict()
+            
             backup_checkpoint = {
                 'epoch': epoch,
                 'best_score': best_score,
                 'score_name': score_name,
-                'model': self.model.state_dict(),
+                'model': model_state_dict,
                 'optim': self.optim.state_dict(),
             }
 
@@ -224,7 +229,7 @@ class Trainer:
                 if _checkpoint_path.exists():
                     os.remove(str(_checkpoint_path))
                 _checkpoint_path = self.save_dir / f'best_model_{epoch}_{score_name}_{best_score}.pth'
-                torch.save(obj=self.model.state_dict(), f=str(_checkpoint_path))
+                torch.save(obj=model_state_dict, f=str(_checkpoint_path))
                 self.verbose(message=f'__Saving Checkpoint__ {str(_checkpoint_path)}', _print=False)
 
                 self.training_info['checkpoint_path'] = str(_checkpoint_path)
